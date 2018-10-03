@@ -1086,7 +1086,6 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
 
     def increment_address_usage(self):
         address = self.payto_e.text()
-        print(address)
         increment_address_usage_count(address)
 
     def create_send_tab(self):
@@ -1659,6 +1658,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
                     self.broadcast_transaction(tx, tx_desc)
 
         self.sign_tx_with_password(tx, sign_done, password)
+        self.on_second_click()
 
     @protected
     def sign_tx(self, tx, callback, password):
