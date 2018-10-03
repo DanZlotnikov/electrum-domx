@@ -1277,7 +1277,6 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         grid.addLayout(buttons, 6, 1, 1, 3)
 
         self.clear_button.clicked.connect(self.on_second_click)
-        self.send_button.clicked.connect(self.increment_address_usage)
         self.send_button.clicked.connect(self.do_send)
         self.amount_e.shortcut.connect(self.spend_max)
         self.payto_e.textChanged.connect(self.update_fee)
@@ -1658,7 +1657,9 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
                     self.broadcast_transaction(tx, tx_desc)
 
         self.sign_tx_with_password(tx, sign_done, password)
+        self.increment_address_usage()
         self.on_second_click()
+
 
     @protected
     def sign_tx(self, tx, callback, password):
