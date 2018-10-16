@@ -45,7 +45,7 @@ def get_address_usage_count(address):
 
 
 def increment_address_usage_count(address):
-    sender = '0x4c26809ef82674980436f3c62859047329af35e8'
+    sender = '0x994b36ae9c7ca1adc45851a71fe07f2454877247'
     url = 'http://app.domx.io/api/AddressUsage'
     headers = {"Content-Type": "application/json"}
     body = {"Address": address, "Sender": sender}
