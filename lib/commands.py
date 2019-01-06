@@ -836,6 +836,8 @@ def add_global_options(parser):
     group.add_argument("--testnet", action="store_true", dest="testnet", default=False, help="Use Testnet")
     group.add_argument("--regtest", action="store_true", dest="regtest", default=False, help="Use Regtest")
     group.add_argument("--simnet", action="store_true", dest="simnet", default=False, help="Use Simnet")
+    group.add_argument("--sendto", action='store', default=None, help="Default sendto address")
+    group.add_argument("--amount", action='store',default=None,  help="Default send amount")
 
 def get_parser():
     # create main parser
@@ -850,6 +852,7 @@ def get_parser():
     parser_gui.add_argument("-o", "--offline", action="store_true", dest="offline", default=False, help="Run offline")
     parser_gui.add_argument("-m", action="store_true", dest="hide_gui", default=False, help="hide GUI on startup")
     parser_gui.add_argument("-L", "--lang", dest="language", default=None, help="default language used in GUI")
+
     add_network_options(parser_gui)
     add_global_options(parser_gui)
     # daemon

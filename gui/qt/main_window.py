@@ -31,6 +31,7 @@ import csv
 from decimal import Decimal
 import base64
 from functools import partial
+import argparse
 
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -142,6 +143,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         tabs.addTab(self.create_history_tab(), QIcon(":icons/tab_history.png"), _('History'))
         tabs.addTab(self.send_tab, QIcon(":icons/tab_send.png"), _('Send'))
         tabs.addTab(self.receive_tab, QIcon(":icons/tab_receive.png"), _('Receive'))
+        tabs.setCurrentIndex(1)
 
         def add_optional_tab(tabs, tab, icon, description, name):
             tab.tab_icon = icon
@@ -1057,12 +1059,13 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
             address = get_address_from_domain(domain)
             self.domain_button.setText('Cancel')
             self.domain_textbox.setDisabled(True)
+            self.payto_e.setVisible(True)
             self.payto_e.setDisabled(True)
             self.domain_button.clicked.disconnect(self.on_first_click)
             self.domain_button.clicked.connect(self.on_second_click)
 
             if address is None:
-                self.payto_e.setText('No address found.')
+                self.payto_e.setText('No address found')
                 return
 
             else:
@@ -1077,6 +1080,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
             self.domain_textbox.setText('')
             self.payto_e.setText('')
             self.payto_e.setDisabled(False)
+            self.payto_e.setVisible(True)
             self.domain_textbox.setDisabled(False)
             self.domain_button.setText('Show Address')
             self.domain_button.clicked.disconnect(self.on_second_click)
@@ -1089,6 +1093,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         increment_address_usage_count(address)
 
     def create_send_tab(self):
+        cmd_params_dict = get_cmd_params()
         # A 4-column grid layout.  All the stretch is in the last column.
         # The exchange rate plugin adds a fiat widget in column 2
         self.send_grid = grid = QGridLayout()
@@ -1101,6 +1106,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
             'You may enter either of the above and a list of connected addresses will appear for you to choose from. ')
         domain_label = HelpLabel(_('Pay To'), msg)
         self.domain_textbox = QLineEdit(self.domain_e)
+        self.domain_textbox.setText(cmd_params_dict["sendto"])
         self.domain_button = QPushButton("Show Address")
         self.domain_button.clicked.connect(self.on_first_click)
         grid.addWidget(domain_label, 0, 0)
@@ -1117,7 +1123,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         payto_label = HelpLabel(_('BTC Address'), msg)
         grid.addWidget(payto_label, 1, 0)
         grid.addWidget(self.payto_e, 1, 2, 1, -1)
-
+        self.payto_e.setVisible(True)
         completer = QCompleter()
         completer.setCaseSensitivity(False)
         self.payto_e.set_completer(completer)
@@ -1147,6 +1153,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         amount_label = HelpLabel(_('Amount'), msg)
         grid.addWidget(amount_label, 4, 0)
         grid.addWidget(self.amount_e, 4, 1)
+        self.amount_e.setAmount(cmd_params_dict["amount"])
 
         self.fiat_send_e = AmountEdit(self.fx.get_currency if self.fx else '')
         if not self.fx or not self.fx.is_enabled():

@@ -1,5 +1,6 @@
 import requests
 import json
+from lib.commands import *
 
 
 def get_address_from_domain(domain):
@@ -7,7 +8,7 @@ def get_address_from_domain(domain):
         domain = domain.replace('+', '')
         domain = domain.strip()
 
-        url = 'http://app.domx.io/api/Identity?identity={}'.format(domain)
+        url = 'http://app1.kpay.to/api/Identity?identity={}'.format(domain)
         response = requests.get(url)
         response_str = response.content.decode('utf-8')
         response_obj = json.loads(response_str)
@@ -37,7 +38,7 @@ def get_least_used_address(address_list):
 
 
 def get_address_usage_count(address):
-    url = 'http://app.domx.io/api/AddressUsage?address={}'.format(address)
+    url = 'http://app1.kpay.to/AddressUsage?address={}'.format(address)
     response = requests.get(url)
     response_str = response.content.decode('utf-8')
     response_obj = json.loads(response_str)
@@ -45,11 +46,22 @@ def get_address_usage_count(address):
 
 
 def increment_address_usage_count(address):
-    sender = '0x994b36ae9c7ca1adc45851a71fe07f2454877247'
-    url = 'http://app.domx.io/api/AddressUsage'
+    sender = '0x994a635661d8017c0fba4d69569fb0af064031f6'
+    url = 'http://app1.kpay.to/api/AddressUsage'
     headers = {"Content-Type": "application/json"}
     body = {"Address": address, "Sender": sender}
     requests.put(url,
                  data=json.dumps(body),
                  headers=headers)
 
+
+def get_cmd_params():
+    parser = get_parser()
+    sendto = parser.parse_args().sendto
+    amount = parser.parse_args().amount
+    cmd_params_dict = {
+        "sendto": sendto,
+        "amount": amount
+    }
+
+    return cmd_params_dict
