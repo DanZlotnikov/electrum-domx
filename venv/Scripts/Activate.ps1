@@ -27,7 +27,7 @@ function global:deactivate ([switch]$NonDestructive) {
 
 deactivate -nondestructive
 
-$env:VIRTUAL_ENV="C:\Users\Dan\Desktop\Electrum-DOMX\Electrum-3.2.2\venv"
+$env:VIRTUAL_ENV="C:\Users\dan\Desktop\Projects\electrum-domx\venv"
 
 if (! $env:VIRTUAL_ENV_DISABLE_PROMPT) {
     # Set the prompt to include the env name

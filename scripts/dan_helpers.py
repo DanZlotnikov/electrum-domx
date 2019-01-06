@@ -24,7 +24,6 @@ def get_address_from_domain(domain):
 def get_least_used_address(address_list):
     if address_list is None or len(address_list) is 0:
         raise AssertionError
-
     lowest_usage_count = get_address_usage_count(address_list[0])
     least_used_address_index = 0
 
@@ -38,7 +37,7 @@ def get_least_used_address(address_list):
 
 
 def get_address_usage_count(address):
-    url = 'http://app1.kpay.to/AddressUsage?address={}'.format(address)
+    url = 'http://app1.kpay.to/api/AddressUsage?address={}'.format(address)
     response = requests.get(url)
     response_str = response.content.decode('utf-8')
     response_obj = json.loads(response_str)

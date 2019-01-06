@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\Dan\Desktop\Electrum-DOMX\Electrum-3.2.2\venv"
+VIRTUAL_ENV="C:\Users\dan\Desktop\Projects\electrum-domx\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
