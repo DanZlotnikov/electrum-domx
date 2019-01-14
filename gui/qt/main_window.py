@@ -1096,57 +1096,6 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         return w
 
 
-    # def create_kpay_tab(self):
-    #     cmd_params_dict = get_cmd_params()
-    #     # A 4-column grid layout.  All the stretch is in the last column.
-    #     # The exchange rate plugin adds a fiat widget in column 2
-    #     self.send_grid = grid = QGridLayout()
-    #     grid.setSpacing(8)
-    #     grid.setColumnStretch(3, 1)
-    #
-    #     # self.domain_e = QWidget()
-    #     # msg = _('E-mail, domain, or phone number connected to BitCoin addresses.') + '\n\n' \
-    #     #       + _(
-    #     #     'You may enter either of the above and a list of connected addresses will appear for you to choose from. ')
-    #     # domain_label = HelpLabel(_('Domain'), msg)
-    #     # self.domain_textbox = QLineEdit(self.domain_e)
-    #     # self.domain_textbox.setText(cmd_params_dict["sendto"])
-    #     # self.domain_button = QPushButton("Show Address")
-    #     # self.domain_button.clicked.connect(self.on_first_click)
-    #     # if self.is_kpay_registered:
-    #     #     grid.addWidget(domain_label, 0, 0)
-    #     #     grid.addWidget(self.domain_textbox, 0, 1, 1, -1)
-    #     #     grid.addWidget(self.domain_button, 1, 1, 1, 1)
-    #     #     grid.addWidget(self.domain_e, 0, 1, 1, -1)
-    #     # else:
-    #     #     grid.addWidget(self.domain_e)
-    #
-    #
-    #     from .paytoedit import PayToEdit
-    #     self.amount_e = BTCAmountEdit(self.get_decimal_point)
-    #     self.payto_e = PayToEdit(self)
-    #     msg = _('Recipient of the funds.') + '\n\n' \
-    #           + _(
-    #         'You may enter a Bitcoin address, a label from your list of contacts (a list of completions will be proposed), or an alias (email-like address that forwards to a Bitcoin address)')
-    #     payto_label = HelpLabel(_('BTC Address'), msg)
-    #     grid.addWidget(payto_label, 1, 0)
-    #     grid.addWidget(self.payto_e, 1, 2, 1, -1)
-    #
-    #     vbox0 = QVBoxLayout()
-    #     vbox0.addLayout(grid)
-    #     hbox = QHBoxLayout()
-    #     hbox.addLayout(vbox0)
-    #     w = QWidget()
-    #     vbox = QVBoxLayout(w)
-    #     vbox.addLayout(hbox)
-    #     vbox.addStretch(1)
-    #     vbox.addWidget(self.invoices_label)
-    #     vbox.addWidget(self.invoice_list)
-    #     vbox.setStretchFactor(self.invoice_list, 1000)
-    #     w.searchable_list = self.invoice_list
-    #
-    #     return w
-
     @pyqtSlot()
     def on_click_get_auth(self):
         msg_box = QMessageBox()
