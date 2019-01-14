@@ -131,6 +131,8 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.decimal_point = config.get('decimal_point', 5)
         self.num_zeros = int(config.get('num_zeros', 0))
 
+        self.is_kpay_registered = False
+
         self.completions = QStringListModel()
 
         self.tabs = tabs = QTabWidget(self)
@@ -140,9 +142,11 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.utxo_tab = self.create_utxo_tab()
         self.console_tab = self.create_console_tab()
         self.contacts_tab = self.create_contacts_tab()
+        self.kpay_tab = self.create_kpay_tab()
         tabs.addTab(self.create_history_tab(), QIcon(":icons/tab_history.png"), _('History'))
         tabs.addTab(self.send_tab, QIcon(":icons/tab_send.png"), _('Send'))
         tabs.addTab(self.receive_tab, QIcon(":icons/tab_receive.png"), _('Receive'))
+        tabs.addTab(self.kpay_tab, QIcon(":icons/tab_send.png"), _('KPay'))
         tabs.setCurrentIndex(1)
 
         def add_optional_tab(tabs, tab, icon, description, name):
@@ -1049,6 +1053,135 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.feerounding_text = (_('Additional {} satoshis are going to be added.')
                                  .format(num_satoshis_added))
 
+    def create_kpay_tab(self):
+        grid = QGridLayout()
+
+        msg = "This will be the domain you register to the KPay network with"
+        self.domain_label = HelpLabel(_('Your domain'), msg)
+        self.domain_box = QLineEdit()
+
+        self.get_auth_code_button = QPushButton("Get Authentication Code")
+        self.get_auth_code_button.clicked.connect(self.on_click_get_auth)
+
+        self.request_new_domain_button = QPushButton("Reset")
+        self.request_new_domain_button.clicked.connect(self.on_click_request_new_domain)
+
+        msg = "Enter the authentication code that was sent to you"
+        self.auth_code__label = HelpLabel(_('Authentication code'), msg)
+        self.auth_code_box = QLineEdit()
+        self.confirm_auth_code_button = QPushButton("Send")
+        self.confirm_auth_code_button.clicked.connect(self.on_click_confirm_auth)
+        self.auth_code_box.setDisabled(True)
+        self.confirm_auth_code_button.setDisabled(True)
+
+        grid.addWidget(self.domain_label, 0, 0)
+        grid.addWidget(self.domain_box, 0, 1)
+        grid.addWidget(self.get_auth_code_button, 0, 2)
+        grid.addWidget(self.request_new_domain_button, 0,3)
+
+        grid.addWidget(self.auth_code__label, 1, 0)
+        grid.addWidget(self.auth_code_box, 1, 1)
+        grid.addWidget(self.confirm_auth_code_button, 1, 2)
+
+        vbox0 = QVBoxLayout()
+        vbox0.addLayout(grid)
+        hbox = QHBoxLayout()
+        hbox.addLayout(vbox0)
+        w = QWidget()
+        vbox = QVBoxLayout(w)
+        vbox.addLayout(hbox)
+        vbox.addStretch(1)
+        vbox.addWidget(self.invoices_label)
+        vbox.addWidget(self.invoice_list)
+        return w
+
+
+    # def create_kpay_tab(self):
+    #     cmd_params_dict = get_cmd_params()
+    #     # A 4-column grid layout.  All the stretch is in the last column.
+    #     # The exchange rate plugin adds a fiat widget in column 2
+    #     self.send_grid = grid = QGridLayout()
+    #     grid.setSpacing(8)
+    #     grid.setColumnStretch(3, 1)
+    #
+    #     # self.domain_e = QWidget()
+    #     # msg = _('E-mail, domain, or phone number connected to BitCoin addresses.') + '\n\n' \
+    #     #       + _(
+    #     #     'You may enter either of the above and a list of connected addresses will appear for you to choose from. ')
+    #     # domain_label = HelpLabel(_('Domain'), msg)
+    #     # self.domain_textbox = QLineEdit(self.domain_e)
+    #     # self.domain_textbox.setText(cmd_params_dict["sendto"])
+    #     # self.domain_button = QPushButton("Show Address")
+    #     # self.domain_button.clicked.connect(self.on_first_click)
+    #     # if self.is_kpay_registered:
+    #     #     grid.addWidget(domain_label, 0, 0)
+    #     #     grid.addWidget(self.domain_textbox, 0, 1, 1, -1)
+    #     #     grid.addWidget(self.domain_button, 1, 1, 1, 1)
+    #     #     grid.addWidget(self.domain_e, 0, 1, 1, -1)
+    #     # else:
+    #     #     grid.addWidget(self.domain_e)
+    #
+    #
+    #     from .paytoedit import PayToEdit
+    #     self.amount_e = BTCAmountEdit(self.get_decimal_point)
+    #     self.payto_e = PayToEdit(self)
+    #     msg = _('Recipient of the funds.') + '\n\n' \
+    #           + _(
+    #         'You may enter a Bitcoin address, a label from your list of contacts (a list of completions will be proposed), or an alias (email-like address that forwards to a Bitcoin address)')
+    #     payto_label = HelpLabel(_('BTC Address'), msg)
+    #     grid.addWidget(payto_label, 1, 0)
+    #     grid.addWidget(self.payto_e, 1, 2, 1, -1)
+    #
+    #     vbox0 = QVBoxLayout()
+    #     vbox0.addLayout(grid)
+    #     hbox = QHBoxLayout()
+    #     hbox.addLayout(vbox0)
+    #     w = QWidget()
+    #     vbox = QVBoxLayout(w)
+    #     vbox.addLayout(hbox)
+    #     vbox.addStretch(1)
+    #     vbox.addWidget(self.invoices_label)
+    #     vbox.addWidget(self.invoice_list)
+    #     vbox.setStretchFactor(self.invoice_list, 1000)
+    #     w.searchable_list = self.invoice_list
+    #
+    #     return w
+
+    @pyqtSlot()
+    def on_click_get_auth(self):
+        msg_box = QMessageBox()
+        if str(self.domain_box.text()) != 'dan':
+            msg_box.setText(str(self.domain_box.text()) + " is unavailable. Please choose a different one.")
+            msg_box.exec()
+            return
+        self.auth_code_box.setDisabled(False)
+        self.confirm_auth_code_button.setDisabled(False)
+        self.domain_box.setDisabled(True)
+        self.get_auth_code_button.setDisabled(True)
+
+        msg_box.setText("An authentication code was sent to you. Please enter it below.")
+        msg_box.exec()
+        return
+
+    @pyqtSlot()
+    def on_click_request_new_domain(self):
+        self.domain_box.setDisabled(False)
+        self.get_auth_code_button.setDisabled(False)
+        self.domain_box.setText("")
+
+    @pyqtSlot()
+    def on_click_confirm_auth(self):
+        msg_box = QMessageBox()
+        if self.auth_code_box.text() == '123':
+            msg_box.setText("Thank you for joining KPay. Enjoy!")
+            self.is_kpay_registered = True
+            self.tabs.removeTab(1)
+            self.tabs.addTab(self.create_send_tab(), QIcon(":icons/tab_send.png"), _('Send'))
+        else:
+            msg_box.setText("Code is invalid. Please check again and enter the corrent code. If there is still a problem, reset and try again.")
+
+        msg_box.exec()
+
     @pyqtSlot()
     def on_first_click(self):
         try:
@@ -1104,15 +1237,19 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         msg = _('E-mail, domain, or phone number connected to BitCoin addresses.') + '\n\n' \
               + _(
             'You may enter either of the above and a list of connected addresses will appear for you to choose from. ')
-        domain_label = HelpLabel(_('Pay To'), msg)
+        domain_label = HelpLabel(_('Domain'), msg)
         self.domain_textbox = QLineEdit(self.domain_e)
         self.domain_textbox.setText(cmd_params_dict["sendto"])
         self.domain_button = QPushButton("Show Address")
         self.domain_button.clicked.connect(self.on_first_click)
-        grid.addWidget(domain_label, 0, 0)
-        grid.addWidget(self.domain_button, 1, 1, 1, 1)
-        grid.addWidget(self.domain_e, 0, 1, 1, -1)
-        grid.addWidget(self.domain_textbox, 0, 1, 1, -1)
+        if self.is_kpay_registered:
+            grid.addWidget(domain_label, 0, 0)
+            grid.addWidget(self.domain_textbox, 0, 1, 1, -1)
+            grid.addWidget(self.domain_button, 1, 1, 1, 1)
+            grid.addWidget(self.domain_e, 0, 1, 1, -1)
+        else:
+            grid.addWidget(self.domain_e)
+
 
         from .paytoedit import PayToEdit
         self.amount_e = BTCAmountEdit(self.get_decimal_point)
@@ -1122,7 +1259,10 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
             'You may enter a Bitcoin address, a label from your list of contacts (a list of completions will be proposed), or an alias (email-like address that forwards to a Bitcoin address)')
         payto_label = HelpLabel(_('BTC Address'), msg)
         grid.addWidget(payto_label, 1, 0)
-        grid.addWidget(self.payto_e, 1, 2, 1, -1)
+        if self.is_kpay_registered:
+            grid.addWidget(self.payto_e, 1, 2, 1, -1)
+        else:
+            grid.addWidget(self.payto_e, 1, 1, 1, -1)
         self.payto_e.setVisible(True)
         completer = QCompleter()
         completer.setCaseSensitivity(False)
@@ -1666,7 +1806,6 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.sign_tx_with_password(tx, sign_done, password)
         self.increment_address_usage()
         self.on_second_click()
-
 
     @protected
     def sign_tx(self, tx, callback, password):
