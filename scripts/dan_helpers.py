@@ -64,3 +64,15 @@ def get_cmd_params():
     }
 
     return cmd_params_dict
+
+
+def is_domain_available(domain):
+    return domain == 'dan'
+
+
+def verify_auth_code(domain, code):
+    return code == '123'
+
+
+def register_domain(domain):
+    print(domain + " registered")

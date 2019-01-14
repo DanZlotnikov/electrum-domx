@@ -1058,7 +1058,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
 
         msg = "This will be the domain you register to the KPay network with"
         self.domain_label = HelpLabel(_('Your domain'), msg)
-        self.domain_box = QLineEdit()
+        self.register_domain_box = QLineEdit()
 
         self.get_auth_code_button = QPushButton("Get Authentication Code")
         self.get_auth_code_button.clicked.connect(self.on_click_get_auth)
@@ -1075,9 +1075,9 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.confirm_auth_code_button.setDisabled(True)
 
         grid.addWidget(self.domain_label, 0, 0)
-        grid.addWidget(self.domain_box, 0, 1)
+        grid.addWidget(self.register_domain_box, 0, 1)
         grid.addWidget(self.get_auth_code_button, 0, 2)
-        grid.addWidget(self.request_new_domain_button, 0,3)
+        grid.addWidget(self.request_new_domain_button, 0, 3)
 
         grid.addWidget(self.auth_code__label, 1, 0)
         grid.addWidget(self.auth_code_box, 1, 1)
@@ -1095,17 +1095,16 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         vbox.addWidget(self.invoice_list)
         return w
 
-
     @pyqtSlot()
     def on_click_get_auth(self):
         msg_box = QMessageBox()
-        if str(self.domain_box.text()) != 'dan':
-            msg_box.setText(str(self.domain_box.text()) + " is unavailable. Please choose a different one.")
+        if not is_domain_available(str(self.register_domain_box.text())):
+            msg_box.setText(str(self.register_domain_box.text()) + " is unavailable. Please choose a different one.")
             msg_box.exec()
             return
         self.auth_code_box.setDisabled(False)
         self.confirm_auth_code_button.setDisabled(False)
-        self.domain_box.setDisabled(True)
+        self.register_domain_box.setDisabled(True)
         self.get_auth_code_button.setDisabled(True)
 
         msg_box.setText("An authentication code was sent to you. Please enter it below.")
@@ -1114,22 +1113,54 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
 
     @pyqtSlot()
     def on_click_request_new_domain(self):
-        self.domain_box.setDisabled(False)
+        self.register_domain_box.setDisabled(False)
         self.get_auth_code_button.setDisabled(False)
-        self.domain_box.setText("")
+        self.register_domain_box.setText("")
+        self.auth_code_box.setDisabled(True)
+        self.confirm_auth_code_button.setDisabled(True)
 
     @pyqtSlot()
     def on_click_confirm_auth(self):
         msg_box = QMessageBox()
-        if self.auth_code_box.text() == '123':
+        if verify_auth_code(self.register_domain_box.text(), self.auth_code_box.text()):
+            try:
+                register_domain(str(self.register_domain_box.text()))
+            except Exception as e:
+                msg_box.setText(
+                    "An error has occurred. Please try again.")
+                msg_box.exec()
+                return
             msg_box.setText("Thank you for joining KPay. Enjoy!")
             self.is_kpay_registered = True
-            self.tabs.removeTab(1)
-            self.tabs.addTab(self.create_send_tab(), QIcon(":icons/tab_send.png"), _('Send'))
+
+            # Rebuild the tabs because send tab was configured
+            self.rebuild_tabs()
         else:
-            msg_box.setText("Code is invalid. Please check again and enter the corrent code. If there is still a problem, reset and try again.")
+            msg_box.setText(
+                "Code is invalid. Please check again and enter the corrent code. If there is still a problem, reset and try again.")
 
         msg_box.exec()
+
+    def rebuild_tabs(self):
+        while self.tabs.count() > 0:
+            self.tabs.removeTab(self.tabs.count() - 1)
+        self.tabs.addTab(self.create_history_tab(), QIcon(":icons/tab_history.png"), _('History'))
+        self.tabs.addTab(self.create_send_tab(), QIcon(":icons/tab_send.png"), _('Send'))
+        self.tabs.addTab(self.receive_tab, QIcon(":icons/tab_receive.png"), _('Receive'))
+        self.tabs.addTab(self.kpay_tab, QIcon(":icons/tab_send.png"), _('KPay'))
+
+        def add_optional_tab(tabs, tab, icon, description, name):
+            tab.tab_icon = icon
+            tab.tab_description = description
+            tab.tab_pos = len(tabs)
+            tab.tab_name = name
+            if self.config.get('show_{}_tab'.format(name), False):
+                tabs.addTab(tab, icon, description.replace("&", ""))
+
+        add_optional_tab(self.tabs, self.addresses_tab, QIcon(":icons/tab_addresses.png"), _("&Addresses"), "addresses")
+        add_optional_tab(self.tabs, self.utxo_tab, QIcon(":icons/tab_coins.png"), _("Co&ins"), "utxo")
+        add_optional_tab(self.tabs, self.contacts_tab, QIcon(":icons/tab_contacts.png"), _("Con&tacts"), "contacts")
+        add_optional_tab(self.tabs, self.console_tab, QIcon(":icons/tab_console.png"), _("Con&sole"), "console")
 
     @pyqtSlot()
     def on_first_click(self):
@@ -1198,7 +1229,6 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
             grid.addWidget(self.domain_e, 0, 1, 1, -1)
         else:
             grid.addWidget(self.domain_e)
-
 
         from .paytoedit import PayToEdit
         self.amount_e = BTCAmountEdit(self.get_decimal_point)
