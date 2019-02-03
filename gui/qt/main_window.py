@@ -131,7 +131,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.decimal_point = config.get('decimal_point', 5)
         self.num_zeros = int(config.get('num_zeros', 0))
 
-        self.is_kpay_registered = False
+        self.is_kpay_registered = True
 
         self.completions = QStringListModel()
 
@@ -1067,7 +1067,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         self.request_new_domain_button.clicked.connect(self.on_click_request_new_domain)
 
         msg = "Enter the authentication code that was sent to you"
-        self.auth_code__label = HelpLabel(_('Authentication code'), msg)
+        self.auth_code_label = HelpLabel(_('Authentication code'), msg)
         self.auth_code_box = QLineEdit()
         self.confirm_auth_code_button = QPushButton("Send")
         self.confirm_auth_code_button.clicked.connect(self.on_click_confirm_auth)
@@ -1079,7 +1079,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         grid.addWidget(self.get_auth_code_button, 0, 2)
         grid.addWidget(self.request_new_domain_button, 0, 3)
 
-        grid.addWidget(self.auth_code__label, 1, 0)
+        grid.addWidget(self.auth_code_label, 1, 0)
         grid.addWidget(self.auth_code_box, 1, 1)
         grid.addWidget(self.confirm_auth_code_button, 1, 2)
 
@@ -1201,6 +1201,28 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         except Exception as e:
             pass
 
+    def popup_kpay_dialog(self):
+        domain_dialog = QInputDialog()
+        domain_dialog.setLabelText("Enter the domain: ")
+        if domain_dialog.exec():
+            try:
+                domain = domain_dialog.textValue()
+                if len(domain) is 0:
+                    return
+
+                address = get_address_from_domain(domain)
+                if address is None:
+                    self.payto_e.setText('No address found')
+                    return
+
+                else:
+                    self.payto_e.setText(address)
+                    return
+
+            except Exception as e:
+                print("Ex")
+                pass
+
     def increment_address_usage(self):
         address = self.payto_e.text()
         increment_address_usage_count(address)
@@ -1217,18 +1239,19 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
         msg = _('E-mail, domain, or phone number connected to BitCoin addresses.') + '\n\n' \
               + _(
             'You may enter either of the above and a list of connected addresses will appear for you to choose from. ')
-        domain_label = HelpLabel(_('Domain'), msg)
-        self.domain_textbox = QLineEdit(self.domain_e)
-        self.domain_textbox.setText(cmd_params_dict["sendto"])
-        self.domain_button = QPushButton("Show Address")
-        self.domain_button.clicked.connect(self.on_first_click)
+        # domain_label = HelpLabel(_('Domain'), msg)
+        # self.domain_textbox = QLineEdit(self.domain_e)
+        # self.domain_textbox.setText(cmd_params_dict["sendto"])
+        self.domain_button = QPushButton("KPay")
+        # self.domain_button.clicked.connect(self.popup_kpay_dialog)
+        self.domain_button.clicked.connect(self.popup_kpay_dialog)
         if self.is_kpay_registered:
-            grid.addWidget(domain_label, 0, 0)
-            grid.addWidget(self.domain_textbox, 0, 1, 1, -1)
-            grid.addWidget(self.domain_button, 1, 1, 1, 1)
-            grid.addWidget(self.domain_e, 0, 1, 1, -1)
-        else:
-            grid.addWidget(self.domain_e)
+            # grid.addWidget(domain_label, 0, 0)
+            # grid.addWidget(self.domain_textbox, 0, 1, 1, -1)
+            grid.addWidget(self.domain_button, 0, 1, 1, 1)
+            # grid.addWidget(self.domain_e, 0, 2, 0, 0)
+        # else:
+            # grid.addWidget(self.domain_e, 0, 0, 0, 0)
 
         from .paytoedit import PayToEdit
         self.amount_e = BTCAmountEdit(self.get_decimal_point)
@@ -1237,11 +1260,11 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
               + _(
             'You may enter a Bitcoin address, a label from your list of contacts (a list of completions will be proposed), or an alias (email-like address that forwards to a Bitcoin address)')
         payto_label = HelpLabel(_('BTC Address'), msg)
-        grid.addWidget(payto_label, 1, 0)
+        grid.addWidget(payto_label, 0, 0)
         if self.is_kpay_registered:
-            grid.addWidget(self.payto_e, 1, 2, 1, -1)
+            grid.addWidget(self.payto_e, 0, 2, 1, -1)
         else:
-            grid.addWidget(self.payto_e, 1, 1, 1, -1)
+            grid.addWidget(self.payto_e, 0, 2, 1, -1)
         self.payto_e.setVisible(True)
         completer = QCompleter()
         completer.setCaseSensitivity(False)
@@ -1252,16 +1275,16 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, PrintError):
               + _(
             'The description is not sent to the recipient of the funds. It is stored in your wallet file, and displayed in the \'History\' tab.')
         description_label = HelpLabel(_('Description'), msg)
-        grid.addWidget(description_label, 2, 0)
+        grid.addWidget(description_label, 1, 0)
         self.message_e = MyLineEdit()
-        grid.addWidget(self.message_e, 2, 1, 1, -1)
+        grid.addWidget(self.message_e, 1, 1, 1, -1)
 
         self.from_label = QLabel(_('From'))
-        grid.addWidget(self.from_label, 3, 0)
+        grid.addWidget(self.from_label, 2, 0)
         self.from_list = MyTreeWidget(self, self.from_list_menu, ['', ''])
         self.from_list.setHeaderHidden(True)
         self.from_list.setMaximumHeight(80)
-        grid.addWidget(self.from_list, 3, 1, 1, -1)
+        grid.addWidget(self.from_list, 2, 1, 1, -1)
         self.set_pay_from([])
 
         msg = _('Amount to be sent.') + '\n\n' \
